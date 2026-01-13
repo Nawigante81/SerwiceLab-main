@@ -1,0 +1,4 @@
+project_id = "pdtngmzcttvdpoazpklv"
+
+[functions.send-repair-confirmation]
+verify_jwt = false
