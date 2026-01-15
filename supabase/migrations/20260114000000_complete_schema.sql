@@ -142,7 +142,8 @@ CREATE POLICY "Users can view own profile"
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   TO authenticated
-  USING (auth.uid() = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
@@ -163,7 +164,8 @@ CREATE POLICY "Users can create own repairs"
 CREATE POLICY "Users can update own repairs"
   ON public.repairs FOR UPDATE
   TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 
 -- RLS Policies: cost_estimates
 CREATE POLICY "Users can view estimates for own repairs"
@@ -181,6 +183,13 @@ CREATE POLICY "Users can update estimates for own repairs"
   ON public.cost_estimates FOR UPDATE
   TO authenticated
   USING (
+    EXISTS (
+      SELECT 1 FROM public.repairs
+      WHERE repairs.id = cost_estimates.repair_id
+      AND repairs.user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.repairs
       WHERE repairs.id = cost_estimates.repair_id
