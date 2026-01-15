@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
 import { Cpu } from "lucide-react";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -22,6 +23,7 @@ const RepairRequest = lazy(() => import("./pages/RepairRequest"));
 const RepairTracking = lazy(() => import("./pages/RepairTracking"));
 const CostEstimate = lazy(() => import("./pages/CostEstimate"));
 const EquipmentPickup = lazy(() => import("./pages/EquipmentPickup"));
+const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -31,7 +33,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <Suspense
             fallback={
@@ -111,6 +113,11 @@ const App = () => (
                 <ProtectedRoute>
                   <EquipmentPickup />
                 </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
               } />
               <Route
                 path="/zg-oszenie-naprawy-i-wysy-ka-sprz-tu"

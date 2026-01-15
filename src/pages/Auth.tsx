@@ -191,6 +191,7 @@ const Auth = () => {
                   id="email"
                   type="email"
                   placeholder="jan@przykład.pl"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -211,6 +212,7 @@ const Auth = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    autoComplete={isLogin ? "current-password" : "new-password"}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
