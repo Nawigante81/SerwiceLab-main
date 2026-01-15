@@ -32,11 +32,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { toast } = useToast();
   const { data: isAdmin } = useIsAdmin();
   const navItems = [
-    { href: "/dashboard", label: "Panel gˆ¢wny", icon: LayoutDashboard },
-    { href: "/zgloszenie-naprawy-i-wysylka-sprzetu", label: "Zgˆo˜ napraw©", icon: Plus },
+    { href: "/dashboard", label: "Panel główny", icon: LayoutDashboard },
+    { href: "/zgloszenie-naprawy-i-wysylka-sprzetu", label: "Zgłoś naprawę", icon: Plus },
     { href: "/sledzenie-statusu-naprawy", label: "Status naprawy", icon: Search },
     { href: "/akceptacja-kosztorysu-i-platnosc", label: "Kosztorysy", icon: FileText },
-    { href: "/odbior-sprzetu-po-naprawie", label: "Odbi¢r sprz©tu", icon: Package },
+    { href: "/odbior-sprzetu-po-naprawie", label: "Odbiór sprzętu", icon: Package },
     { href: "/settings", label: "Ustawienia", icon: Settings },
     ...(isAdmin ? [{ href: "/admin", label: "Panel admina", icon: LayoutDashboard }] : []),
   ];

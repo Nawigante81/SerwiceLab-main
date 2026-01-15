@@ -78,7 +78,7 @@ const Admin = () => {
             Panel admina
           </h1>
           <p className="font-sans text-muted-foreground mt-1">
-            Podglad napraw, kosztorysow i wiadomosci kontaktowych.
+            Podgląd napraw, kosztorysów i wiadomości kontaktowych.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ const Admin = () => {
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs uppercase text-muted-foreground">Wiadomosci</p>
+            <p className="text-xs uppercase text-muted-foreground">Wiadomości</p>
             <p className="text-2xl font-semibold text-foreground">
               {messagesLoading ? "-" : messages?.length ?? 0}
             </p>
@@ -107,7 +107,7 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Naprawy</h2>
             {repairsError && (
-              <span className="text-sm text-destructive">Blad pobierania danych</span>
+              <span className="text-sm text-destructive">Błąd pobierania danych</span>
             )}
           </div>
           <div className="rounded-xl border border-border bg-card">
@@ -115,8 +115,8 @@ const Admin = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Uzytkownik</TableHead>
-                  <TableHead>Urzadzenie</TableHead>
+                  <TableHead>Użytkownik</TableHead>
+                  <TableHead>Urządzenie</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
                 </TableRow>
@@ -125,7 +125,7 @@ const Admin = () => {
                 {repairsLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-muted-foreground">
-                      Ladowanie...
+                      Ładowanie...
                     </TableCell>
                   </TableRow>
                 )}
@@ -160,7 +160,7 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Kosztorysy</h2>
             {estimatesError && (
-              <span className="text-sm text-destructive">Blad pobierania danych</span>
+              <span className="text-sm text-destructive">Błąd pobierania danych</span>
             )}
           </div>
           <div className="rounded-xl border border-border bg-card">
@@ -178,7 +178,7 @@ const Admin = () => {
                 {estimatesLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-muted-foreground">
-                      Ladowanie...
+                      Ładowanie...
                     </TableCell>
                   </TableRow>
                 )}
@@ -207,9 +207,9 @@ const Admin = () => {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Wiadomosci kontaktowe</h2>
+            <h2 className="text-lg font-semibold text-foreground">Wiadomości kontaktowe</h2>
             {messagesError && (
-              <span className="text-sm text-destructive">Blad pobierania danych</span>
+              <span className="text-sm text-destructive">Błąd pobierania danych</span>
             )}
           </div>
           <div className="rounded-xl border border-border bg-card">
@@ -227,7 +227,7 @@ const Admin = () => {
                 {messagesLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-muted-foreground">
-                      Ladowanie...
+                      Ładowanie...
                     </TableCell>
                   </TableRow>
                 )}

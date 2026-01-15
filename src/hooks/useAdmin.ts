@@ -10,10 +10,14 @@ export const useIsAdmin = () => {
     queryFn: async () => {
       if (!user) return false;
 
-      const { data, error } = await supabase.rpc("is_admin");
+      const { data, error } = await supabase
+        .from("admins")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
       if (error) throw error;
 
-      return Boolean(data);
+      return Boolean(data?.user_id);
     },
     enabled: !!user,
     staleTime: 60 * 1000,

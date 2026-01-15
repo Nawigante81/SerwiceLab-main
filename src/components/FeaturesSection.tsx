@@ -5,11 +5,11 @@ import { useState } from "react";
 const features = [
   { icon: Laptop, title: "Laptopy", description: "Naprawa wszystkich marek - HP, Dell, Lenovo, ASUS, Acer i innych.", category: "laptop" },
   { icon: Monitor, title: "Komputery PC", description: "Stacje robocze, zestawy gamingowe i komputery biurowe.", category: "laptop" },
-  { icon: Wrench, title: "Czyszczenie i konserwacja", description: "Czyszczenie sprzetu, wymiana past termoprzewodzacych i konserwacja.", category: "laptop" },
+  { icon: Wrench, title: "Czyszczenie i konserwacja", description: "Czyszczenie sprzętu, wymiana past termoprzewodzących i konserwacja.", category: "laptop" },
   { icon: Monitor, title: "Komputery PC", description: "Stacje robocze, zestawy gamingowe i komputery biurowe.", category: "pc" },
-  { icon: Cpu, title: "Podzespoˆy", description: "Wymiana procesor¢w, RAM, kart graficznych i pˆyt gˆ¢wnych.", category: "pc" },
-  { icon: Wifi, title: "Sieci i WiFi", description: "Naprawy moduˆ¢w sieciowych i kart WiFi.", category: "other" },
-  { icon: Battery, title: "Baterie", description: "Wymiana baterii w laptopach i urz¥dzeniach mobilnych.", category: "other" },
+  { icon: Cpu, title: "Podzespoły", description: "Wymiana procesorów, RAM, kart graficznych i płyt głównych.", category: "pc" },
+  { icon: Wifi, title: "Sieci i WiFi", description: "Naprawy modułów sieciowych i kart WiFi.", category: "other" },
+  { icon: Battery, title: "Baterie", description: "Wymiana baterii w laptopach i urządzeniach mobilnych.", category: "other" },
 ];
 
 const issuesByCategory = {
