@@ -102,36 +102,48 @@ export type Database = {
           city: string | null
           created_at: string
           email: string | null
+          email_notifications: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
+          newsletter_subscription: boolean | null
           phone: string | null
           postal_code: string | null
+          sms_notifications: boolean | null
           street: string | null
+          two_factor_enabled: boolean | null
           updated_at: string
         }
         Insert: {
           city?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          newsletter_subscription?: boolean | null
           phone?: string | null
           postal_code?: string | null
+          sms_notifications?: boolean | null
           street?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
           city?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          newsletter_subscription?: boolean | null
           phone?: string | null
           postal_code?: string | null
+          sms_notifications?: boolean | null
           street?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []
