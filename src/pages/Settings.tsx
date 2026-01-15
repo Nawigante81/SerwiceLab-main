@@ -49,7 +49,7 @@ const Settings = () => {
     two_factor_enabled: false,
   });
 
-  const [isDarkMode, setIsDarkMode] = useState(theme === "dark");
+  const [isDarkMode, setIsDarkMode] = useState(theme === "dark" || theme === undefined);
   const [hasChanges, setHasChanges] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
