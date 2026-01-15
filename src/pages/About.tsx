@@ -80,7 +80,7 @@ const testimonials = [
 // Certifications and trust elements
 const certifications = [
   { name: "ISO 9001:2015", description: "System zarządzania jakością" },
-  { name: "Certyfikat GIODO", description: "Ochrona danych osobowych" },
+  { name: "Certyfikat RODO/GDPR", description: "Ochrona danych osobowych" },
   { name: "Autoryzowany serwis", description: "Partnera wiodących marek" },
   { name: "Gwarancja jakości", description: "12-24 miesiące gwarancji" },
 ];
@@ -168,7 +168,7 @@ const About = () => {
                     <Target className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-display text-xl font-semibold text-foreground mb-2">2020 - Pierwszy w Polsce model wysyłkowy</h3>
+                    <h3 className="font-display text-xl font-semibold text-foreground mb-2">2020 - Innowacyjny model wysyłkowy</h3>
                     <p className="font-sans text-muted-foreground">
                       Wprowadziliśmy innowacyjny model napraw przez paczkomaty. To był przełom - 
                       klienci z całej Polski mogli korzystać z naszych usług bez wychodzenia z domu.
@@ -398,14 +398,14 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.map((testimonial) => (
               <motion.div
-                key={`${testimonial.name}-${index}`}
+                key={`${testimonial.name}-${testimonial.date}`}
                 className="bg-card border border-border rounded-2xl p-6"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5 }}
               >
                 <div className="flex items-center gap-1 mb-3">
                   {[...Array(testimonial.rating)].map((_, i) => (
