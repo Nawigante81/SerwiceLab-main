@@ -16,6 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Settings = () => {
   const { data: profile, isLoading } = useProfile();
@@ -42,6 +52,7 @@ const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(theme === "dark");
   const [hasChanges, setHasChanges] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -72,12 +83,15 @@ const Settings = () => {
     setTheme(checked ? "dark" : "light");
   };
 
-  const handleCancel = () => {
+  const handleCancelClick = () => {
     if (hasChanges) {
-      const confirmCancel = window.confirm("Masz niezapisane zmiany. Czy na pewno chcesz anulować?");
-      if (!confirmCancel) return;
+      setIsCancelDialogOpen(true);
+    } else {
+      toast.info("Brak zmian do anulowania");
     }
-    
+  };
+
+  const handleCancelConfirm = () => {
     if (profile) {
       setFormData({
         first_name: profile.first_name || "",
@@ -96,6 +110,7 @@ const Settings = () => {
       });
     }
     setHasChanges(false);
+    setIsCancelDialogOpen(false);
     toast.info("Zmiany zostały anulowane");
   };
 
@@ -402,7 +417,7 @@ const Settings = () => {
 
         {/* Save Button */}
         <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancelClick}>
             Anuluj
           </Button>
           <Button 
@@ -414,6 +429,24 @@ const Settings = () => {
             Zapisz zmiany
           </Button>
         </div>
+
+        {/* Cancel Confirmation Dialog */}
+        <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Anulować zmiany?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Masz niezapisane zmiany. Czy na pewno chcesz je anulować? Wszystkie wprowadzone zmiany zostaną utracone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Nie, kontynuuj edycję</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelConfirm}>
+                Tak, anuluj zmiany
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
