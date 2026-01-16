@@ -5,6 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTheme } from "next-themes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
@@ -27,11 +37,16 @@ const Settings = () => {
     postal_code: "",
     city: "",
   });
-  const [notificationEmail, setNotificationEmail] = useState(true);
-  const [notificationSms, setNotificationSms] = useState(true);
-  const [newsletter, setNewsletter] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [preferences, setPreferences] = useState({
+    email_notifications: true,
+    sms_notifications: true,
+    newsletter_subscription: false,
+    two_factor_enabled: false,
+  });
+
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -48,40 +63,60 @@ const Settings = () => {
         postal_code: profile.postal_code || "",
         city: profile.city || "",
       });
-      setNotificationEmail(profile.notification_email ?? true);
-      setNotificationSms(profile.notification_sms ?? true);
-      setNewsletter(profile.newsletter ?? false);
-      setDarkMode(profile.dark_mode ?? true);
-      setTwoFactorEnabled(profile.two_factor_enabled ?? false);
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (!themeInitialized.current && profile) {
-      const desiredTheme = (profile.dark_mode ?? true) ? "dark" : "light";
-      setTheme(desiredTheme);
-      themeInitialized.current = true;
+      setPreferences({
+        email_notifications: profile.email_notifications ?? true,
+        sms_notifications: profile.sms_notifications ?? true,
+        newsletter_subscription: profile.newsletter_subscription ?? false,
+        two_factor_enabled: profile.two_factor_enabled ?? false,
+      });
+      const nextDarkMode = profile.dark_mode ?? true;
+      setIsDarkMode(nextDarkMode);
+      if (!themeInitialized.current) {
+        setTheme(nextDarkMode ? "dark" : "light");
+        themeInitialized.current = true;
+      }
+      setHasChanges(false);
     }
   }, [profile, setTheme]);
 
-  const resetToProfile = () => {
-    if (!profile) return;
-    setFormData({
-      first_name: profile.first_name || "",
-      last_name: profile.last_name || "",
-      email: profile.email || "",
-      phone: profile.phone || "",
-      street: profile.street || "",
-      postal_code: profile.postal_code || "",
-      city: profile.city || "",
-    });
-    setNotificationEmail(profile.notification_email ?? true);
-    setNotificationSms(profile.notification_sms ?? true);
-    setNewsletter(profile.newsletter ?? false);
-    const nextDarkMode = profile.dark_mode ?? true;
-    setDarkMode(nextDarkMode);
-    setTheme(nextDarkMode ? "dark" : "light");
-    setTwoFactorEnabled(profile.two_factor_enabled ?? false);
+  const handleThemeToggle = (checked: boolean) => {
+    setIsDarkMode(checked);
+    setTheme(checked ? "dark" : "light");
+    setHasChanges(true);
+  };
+
+  const handleCancelClick = () => {
+    if (hasChanges) {
+      setIsCancelDialogOpen(true);
+    } else {
+      toast.info("Brak zmian do anulowania");
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        street: profile.street || "",
+        postal_code: profile.postal_code || "",
+        city: profile.city || "",
+      });
+      setPreferences({
+        email_notifications: profile.email_notifications ?? true,
+        sms_notifications: profile.sms_notifications ?? true,
+        newsletter_subscription: profile.newsletter_subscription ?? false,
+        two_factor_enabled: profile.two_factor_enabled ?? false,
+      });
+      const nextDarkMode = profile.dark_mode ?? true;
+      setIsDarkMode(nextDarkMode);
+      setTheme(nextDarkMode ? "dark" : "light");
+    }
+    setHasChanges(false);
+    setIsCancelDialogOpen(false);
+    toast.info("Zmiany zostały anulowane");
   };
 
   const handleSave = async () => {
@@ -96,12 +131,10 @@ const Settings = () => {
 
       await updateProfile.mutateAsync({
         ...formData,
-        notification_email: notificationEmail,
-        notification_sms: notificationSms,
-        newsletter,
-        dark_mode: darkMode,
-        two_factor_enabled: twoFactorEnabled,
+        ...preferences,
+        dark_mode: isDarkMode,
       });
+      setHasChanges(false);
       toast.success("Zmiany zostały zapisane");
     } catch {
       toast.error("Nie udało się zapisać zmian. Spróbuj ponownie.");
@@ -223,7 +256,10 @@ const Settings = () => {
                 <Input
                   id="firstName"
                   value={formData.first_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, first_name: e.target.value }));
+                    setHasChanges(true);
+                  }}
                   className="font-sans"
                 />
               </div>
@@ -232,7 +268,10 @@ const Settings = () => {
                 <Input
                   id="lastName"
                   value={formData.last_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, last_name: e.target.value }));
+                    setHasChanges(true);
+                  }}
                   className="font-sans"
                 />
               </div>
@@ -246,7 +285,10 @@ const Settings = () => {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, email: e.target.value }));
+                  setHasChanges(true);
+                }}
                 className="font-sans"
               />
             </div>
@@ -259,7 +301,10 @@ const Settings = () => {
                 id="phone"
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, phone: e.target.value }));
+                  setHasChanges(true);
+                }}
                 className="font-sans"
               />
             </div>
@@ -280,7 +325,10 @@ const Settings = () => {
               <Input
                 id="street"
                 value={formData.street}
-                onChange={(e) => setFormData(prev => ({ ...prev, street: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, street: e.target.value }));
+                  setHasChanges(true);
+                }}
                 className="font-sans"
               />
             </div>
@@ -290,7 +338,10 @@ const Settings = () => {
                 <Input
                   id="postalCode"
                   value={formData.postal_code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, postal_code: e.target.value }));
+                    setHasChanges(true);
+                  }}
                   className="font-sans"
                 />
               </div>
@@ -299,7 +350,10 @@ const Settings = () => {
                 <Input
                   id="city"
                   value={formData.city}
-                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, city: e.target.value }));
+                    setHasChanges(true);
+                  }}
                   className="font-sans"
                 />
               </div>
@@ -323,7 +377,13 @@ const Settings = () => {
                   Otrzymuj aktualizacje o statusie napraw
                 </p>
               </div>
-              <Switch checked={notificationEmail} onCheckedChange={setNotificationEmail} />
+              <Switch 
+                checked={preferences.email_notifications}
+                onCheckedChange={(checked) => {
+                  setPreferences(prev => ({ ...prev, email_notifications: checked }));
+                  setHasChanges(true);
+                }}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -332,7 +392,13 @@ const Settings = () => {
                   Ważne powiadomienia na telefon
                 </p>
               </div>
-              <Switch checked={notificationSms} onCheckedChange={setNotificationSms} />
+              <Switch 
+                checked={preferences.sms_notifications}
+                onCheckedChange={(checked) => {
+                  setPreferences(prev => ({ ...prev, sms_notifications: checked }));
+                  setHasChanges(true);
+                }}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -341,7 +407,13 @@ const Settings = () => {
                   Promocje i aktualności
                 </p>
               </div>
-              <Switch checked={newsletter} onCheckedChange={setNewsletter} />
+              <Switch 
+                checked={preferences.newsletter_subscription}
+                onCheckedChange={(checked) => {
+                  setPreferences(prev => ({ ...prev, newsletter_subscription: checked }));
+                  setHasChanges(true);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -373,7 +445,16 @@ const Settings = () => {
                   Dodatkowa warstwa ochrony konta
                 </p>
               </div>
-              <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
+              <Switch 
+                checked={preferences.two_factor_enabled}
+                onCheckedChange={(checked) => {
+                  setPreferences(prev => ({ ...prev, two_factor_enabled: checked }));
+                  setHasChanges(true);
+                  if (checked) {
+                    toast.info("Weryfikacja dwuetapowa zostanie wkrótce dostępna");
+                  }
+                }}
+              />
             </div>
           </div>
         </div>
@@ -394,20 +475,16 @@ const Settings = () => {
                   Włącz ciemny motyw interfejsu
                 </p>
               </div>
-              <Switch
-                checked={darkMode}
-                onCheckedChange={(checked) => {
-                  setDarkMode(checked);
-                  setTheme(checked ? "dark" : "light");
-                }}
-              />
+              <Switch checked={isDarkMode} onCheckedChange={handleThemeToggle} />
             </div>
           </div>
         </div>
 
         {/* Save Button */}
         <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={resetToProfile}>Anuluj</Button>
+          <Button variant="outline" onClick={handleCancelClick}>
+            Anuluj
+          </Button>
           <Button 
             variant="hero" 
             onClick={handleSave}
@@ -455,6 +532,23 @@ const Settings = () => {
             </div>
           </DialogContent>
         </Dialog>
+        {/* Cancel Confirmation Dialog */}
+        <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Anulować zmiany?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Masz niezapisane zmiany. Czy na pewno chcesz je anulować? Wszystkie wprowadzone zmiany zostaną utracone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Nie, kontynuuj edycję</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelConfirm}>
+                Tak, anuluj zmiany
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

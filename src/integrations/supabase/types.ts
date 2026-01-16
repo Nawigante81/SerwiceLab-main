@@ -177,14 +177,17 @@ export type Database = {
           created_at: string
           dark_mode: boolean | null
           email: string | null
+          email_notifications: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
           newsletter: boolean | null
+          newsletter_subscription: boolean | null
           notification_email: boolean | null
           notification_sms: boolean | null
           phone: string | null
           postal_code: string | null
+          sms_notifications: boolean | null
           street: string | null
           two_factor_enabled: boolean | null
           updated_at: string
@@ -194,14 +197,17 @@ export type Database = {
           created_at?: string
           dark_mode?: boolean | null
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id: string
           last_name?: string | null
           newsletter?: boolean | null
+          newsletter_subscription?: boolean | null
           notification_email?: boolean | null
           notification_sms?: boolean | null
           phone?: string | null
           postal_code?: string | null
+          sms_notifications?: boolean | null
           street?: string | null
           two_factor_enabled?: boolean | null
           updated_at?: string
@@ -211,14 +217,17 @@ export type Database = {
           created_at?: string
           dark_mode?: boolean | null
           email?: string | null
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           newsletter?: boolean | null
+          newsletter_subscription?: boolean | null
           notification_email?: boolean | null
           notification_sms?: boolean | null
           phone?: string | null
           postal_code?: string | null
+          sms_notifications?: boolean | null
           street?: string | null
           two_factor_enabled?: boolean | null
           updated_at?: string
