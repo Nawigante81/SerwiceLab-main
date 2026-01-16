@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Loader2
+  Loader2,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -37,6 +38,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { href: "/sledzenie-statusu-naprawy", label: "Status naprawy", icon: Search },
     { href: "/akceptacja-kosztorysu-i-platnosc", label: "Kosztorysy", icon: FileText },
     { href: "/odbior-sprzetu-po-naprawie", label: "Odbiór sprzętu", icon: Package },
+    { href: "/czat-wsparcia", label: "Czat wsparcia", icon: MessageCircle },
     { href: "/settings", label: "Ustawienia", icon: Settings },
     ...(isAdmin ? [{ href: "/admin", label: "Panel admina", icon: LayoutDashboard }] : []),
   ];
@@ -52,8 +54,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       navigate("/");
     } catch {
       toast({
-        title: "Błąd",
-        description: "Nie udało się wylogować.",
+        title: "Nie udało się wylogować",
+        description: "Spróbuj ponownie. Jeśli problem się powtarza, odśwież stronę.",
         variant: "destructive",
       });
     } finally {
@@ -188,3 +190,5 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 };
 
 export default DashboardLayout;
+
+

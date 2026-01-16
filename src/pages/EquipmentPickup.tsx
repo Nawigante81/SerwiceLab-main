@@ -1,6 +1,9 @@
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRepairs } from "@/hooks/useRepairs";
+import { useCreateRepairReview, useRepairReviews, useUpdateRepairReview } from "@/hooks/useRepairReviews";
 import { repairStatusLabels, getTrackingUrl } from "@/lib/repair-utils";
 import { 
   Package, 
@@ -10,18 +13,48 @@ import {
   CheckCircle,
   Star,
   MessageCircle,
-  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const EquipmentPickup = () => {
   const { data: repairs, isLoading } = useRepairs();
+  const { data: reviews = [] } = useRepairReviews();
+  const createReview = useCreateRepairReview();
+  const updateReview = useUpdateRepairReview();
+  const { toast } = useToast();
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [submittingReviewId, setSubmittingReviewId] = useState<string | null>(null);
 
   // Get completed/shipped repairs
   const completedRepairs = repairs?.filter(
     r => r.status === "completed" || r.status === "shipped" || r.status === "delivered"
   ) ?? [];
+  const reviewByRepairId = useMemo(() => {
+    const map = new Map<string, (typeof reviews)[number]>();
+    reviews.forEach((review) => {
+      map.set(review.repair_id, review);
+    });
+    return map;
+  }, [reviews]);
+
+  useEffect(() => {
+    setReviewDrafts((prev) => {
+      const next = { ...prev };
+      completedRepairs.forEach((repair) => {
+        const existing = reviewByRepairId.get(repair.id);
+        if (!next[repair.id] && existing) {
+          next[repair.id] = {
+            rating: existing.rating,
+            comment: existing.comment ?? "",
+          };
+        }
+      });
+      return next;
+    });
+  }, [completedRepairs, reviewByRepairId]);
 
   // Find active shipment (shipped status)
   const activeShipment = repairs?.find(r => r.status === "shipped");
@@ -29,11 +62,131 @@ const EquipmentPickup = () => {
     ? getTrackingUrl(activeShipment.tracking_number_return, activeShipment.shipping_method)
     : null;
 
+  const handleReviewChange = (repairId: string, rating: number) => {
+    setReviewDrafts((prev) => ({
+      ...prev,
+      [repairId]: {
+        rating,
+        comment: prev[repairId]?.comment ?? "",
+      },
+    }));
+  };
+
+  const handleReviewCommentChange = (repairId: string, comment: string) => {
+    setReviewDrafts((prev) => ({
+      ...prev,
+      [repairId]: {
+        rating: prev[repairId]?.rating ?? 0,
+        comment,
+      },
+    }));
+  };
+
+  const handleReviewSubmit = async (repairId: string) => {
+    const draft = reviewDrafts[repairId];
+    if (!draft?.rating) {
+      toast({
+        title: "Wybierz ocenę",
+        description: "Zaznacz liczbę gwiazdek przed wysłaniem opinii.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingReviewId(repairId);
+    const existing = reviewByRepairId.get(repairId);
+    try {
+      if (existing) {
+        await updateReview.mutateAsync({
+          id: existing.id,
+          rating: draft.rating,
+          comment: draft.comment.trim() || null,
+        });
+      } else {
+        await createReview.mutateAsync({
+          repair_id: repairId,
+          rating: draft.rating,
+          comment: draft.comment.trim() || null,
+        });
+      }
+      toast({
+        title: "Dziękujemy za opinię!",
+        description: "Twoja ocena została zapisana.",
+      });
+    } catch {
+      toast({
+        title: "Nie udało się zapisać opinii",
+        description: "Spróbuj ponownie za chwilę.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingReviewId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+
+          <div className="rounded-xl bg-card border border-border overflow-hidden">
+            <div className="p-6 border-b border-border bg-primary/5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-52" />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-secondary/50 space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <div className="pt-4 border-t border-border space-y-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-64" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Skeleton className="h-5 w-40" />
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="p-4 rounded-xl bg-card border border-border space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 rounded-xl bg-card border border-border text-center space-y-3">
+            <Skeleton className="h-8 w-8 rounded-full mx-auto" />
+            <Skeleton className="h-5 w-60 mx-auto" />
+            <Skeleton className="h-4 w-72 mx-auto" />
+            <Skeleton className="h-9 w-40 mx-auto" />
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -202,22 +355,64 @@ const EquipmentPickup = () => {
                   </div>
                   
                   {/* Review Prompt */}
-                  {repair.status === "delivered" && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <div className="flex items-center justify-between">
+                  {(repair.status === "completed" || repair.status === "delivered") && (
+                    <div className="mt-4 pt-4 border-t border-border space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
                         <p className="font-sans text-sm text-muted-foreground">
                           Oceń naprawę
                         </p>
                         <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              className="p-1 hover:scale-110 transition-transform"
-                            >
-                              <Star className="w-5 h-5 text-muted-foreground hover:text-primary hover:fill-primary transition-colors" />
-                            </button>
-                          ))}
+                          {[1, 2, 3, 4, 5].map((star) => {
+                            const draft = reviewDrafts[repair.id];
+                            const isActive = (draft?.rating ?? 0) >= star;
+                            return (
+                              <button
+                                key={star}
+                                type="button"
+                                className="p-1 hover:scale-110 transition-transform"
+                                onClick={() => handleReviewChange(repair.id, star)}
+                                aria-label={`Ocena ${star} gwiazdek`}
+                              >
+                                <Star
+                                  className={cn(
+                                    "w-5 h-5 transition-colors",
+                                    isActive
+                                      ? "text-primary fill-primary"
+                                      : "text-muted-foreground hover:text-primary hover:fill-primary"
+                                  )}
+                                />
+                              </button>
+                            );
+                          })}
                         </div>
+                      </div>
+                      <Textarea
+                        value={reviewDrafts[repair.id]?.comment ?? ""}
+                        onChange={(event) => handleReviewCommentChange(repair.id, event.target.value)}
+                        placeholder="Dodaj krótki komentarz (opcjonalnie)"
+                        rows={3}
+                        className="font-sans"
+                      />
+                      <div className="flex items-center justify-between gap-3">
+                        {reviewByRepairId.get(repair.id) ? (
+                          <p className="text-xs text-muted-foreground">
+                            Możesz edytować swoją opinię w dowolnym momencie.
+                          </p>
+                        ) : (
+                          <span />
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReviewSubmit(repair.id)}
+                          disabled={submittingReviewId === repair.id}
+                        >
+                          {submittingReviewId === repair.id
+                            ? "Zapisywanie..."
+                            : reviewByRepairId.get(repair.id)
+                            ? "Aktualizuj ocenę"
+                            : "Zapisz ocenę"}
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -246,9 +441,14 @@ const EquipmentPickup = () => {
           <p className="font-sans text-sm text-muted-foreground mt-1 mb-4">
             Skontaktuj się z nami, jeśli masz problem z odbiorem paczki
           </p>
-          <Button asChild variant="outline">
-            <Link to="/kontakt">Kontakt z obsługą</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild variant="hero">
+              <Link to="/czat-wsparcia">Czat na ¾ywo</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/kontakt">Kontakt z obsˆug¥</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </DashboardLayout>
@@ -256,3 +456,5 @@ const EquipmentPickup = () => {
 };
 
 export default EquipmentPickup;
+
+

@@ -1,16 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { User, Mail, Phone, MapPin, Bell, Shield, Palette, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const { setTheme } = useTheme();
+  const themeInitialized = useRef(false);
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -21,6 +27,15 @@ const Settings = () => {
     postal_code: "",
     city: "",
   });
+  const [notificationEmail, setNotificationEmail] = useState(true);
+  const [notificationSms, setNotificationSms] = useState(true);
+  const [newsletter, setNewsletter] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -33,23 +48,148 @@ const Settings = () => {
         postal_code: profile.postal_code || "",
         city: profile.city || "",
       });
+      setNotificationEmail(profile.notification_email ?? true);
+      setNotificationSms(profile.notification_sms ?? true);
+      setNewsletter(profile.newsletter ?? false);
+      setDarkMode(profile.dark_mode ?? true);
+      setTwoFactorEnabled(profile.two_factor_enabled ?? false);
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (!themeInitialized.current && profile) {
+      const desiredTheme = (profile.dark_mode ?? true) ? "dark" : "light";
+      setTheme(desiredTheme);
+      themeInitialized.current = true;
+    }
+  }, [profile, setTheme]);
+
+  const resetToProfile = () => {
+    if (!profile) return;
+    setFormData({
+      first_name: profile.first_name || "",
+      last_name: profile.last_name || "",
+      email: profile.email || "",
+      phone: profile.phone || "",
+      street: profile.street || "",
+      postal_code: profile.postal_code || "",
+      city: profile.city || "",
+    });
+    setNotificationEmail(profile.notification_email ?? true);
+    setNotificationSms(profile.notification_sms ?? true);
+    setNewsletter(profile.newsletter ?? false);
+    const nextDarkMode = profile.dark_mode ?? true;
+    setDarkMode(nextDarkMode);
+    setTheme(nextDarkMode ? "dark" : "light");
+    setTwoFactorEnabled(profile.two_factor_enabled ?? false);
+  };
+
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync(formData);
+      if (profile?.email && formData.email !== profile.email) {
+        const { error } = await supabase.auth.updateUser({ email: formData.email });
+        if (error) {
+          toast.error("Nie udało się zaktualizować adresu email.");
+          return;
+        }
+      }
+
+      await updateProfile.mutateAsync({
+        ...formData,
+        notification_email: notificationEmail,
+        notification_sms: notificationSms,
+        newsletter,
+        dark_mode: darkMode,
+        two_factor_enabled: twoFactorEnabled,
+      });
       toast.success("Zmiany zostały zapisane");
     } catch {
-      toast.error("Wystąpił błąd podczas zapisywania zmian");
+      toast.error("Nie udało się zapisać zmian. Spróbuj ponownie.");
+    }
+  };
+
+  const handlePasswordUpdate = async () => {
+    if (passwordValue.length < 6) {
+      toast.error("Hasło musi mieć co najmniej 6 znaków.");
+      return;
+    }
+    if (passwordValue !== passwordConfirm) {
+      toast.error("Hasła nie są identyczne.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwordValue });
+      if (error) {
+        toast.error("Nie udało się zmienić hasła.");
+        return;
+      }
+      toast.success("Hasło zostało zmienione.");
+      setPasswordDialogOpen(false);
+      setPasswordValue("");
+      setPasswordConfirm("");
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-8 max-w-3xl">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="rounded-xl bg-card border border-border overflow-hidden">
+              <div className="p-6 border-b border-border flex items-center gap-3">
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div className="rounded-xl bg-card border border-border overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center gap-3">
+              <Skeleton className="h-5 w-5" />
+              <Skeleton className="h-5 w-28" />
+            </div>
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-56" />
+                  </div>
+                  <Skeleton className="h-6 w-12 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-32" />
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -183,7 +323,7 @@ const Settings = () => {
                   Otrzymuj aktualizacje o statusie napraw
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notificationEmail} onCheckedChange={setNotificationEmail} />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -192,7 +332,7 @@ const Settings = () => {
                   Ważne powiadomienia na telefon
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={notificationSms} onCheckedChange={setNotificationSms} />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -201,7 +341,7 @@ const Settings = () => {
                   Promocje i aktualności
                 </p>
               </div>
-              <Switch />
+              <Switch checked={newsletter} onCheckedChange={setNewsletter} />
             </div>
           </div>
         </div>
@@ -222,7 +362,7 @@ const Settings = () => {
                   Ostatnia zmiana: 30 dni temu
                 </p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setPasswordDialogOpen(true)}>
                 Zmień
               </Button>
             </div>
@@ -233,7 +373,7 @@ const Settings = () => {
                   Dodatkowa warstwa ochrony konta
                 </p>
               </div>
-              <Switch />
+              <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
             </div>
           </div>
         </div>
@@ -254,14 +394,20 @@ const Settings = () => {
                   Włącz ciemny motyw interfejsu
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch
+                checked={darkMode}
+                onCheckedChange={(checked) => {
+                  setDarkMode(checked);
+                  setTheme(checked ? "dark" : "light");
+                }}
+              />
             </div>
           </div>
         </div>
 
         {/* Save Button */}
         <div className="flex justify-end gap-4">
-          <Button variant="outline">Anuluj</Button>
+          <Button variant="outline" onClick={resetToProfile}>Anuluj</Button>
           <Button 
             variant="hero" 
             onClick={handleSave}
@@ -271,6 +417,44 @@ const Settings = () => {
             Zapisz zmiany
           </Button>
         </div>
+
+        <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Zmień hasło</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nowe hasło</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordValue}
+                  onChange={(event) => setPasswordValue(event.target.value)}
+                  placeholder="Minimum 6 znaków"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Powtórz hasło</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordConfirm}
+                  onChange={(event) => setPasswordConfirm(event.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+                  Anuluj
+                </Button>
+                <Button variant="hero" onClick={handlePasswordUpdate} disabled={passwordSaving}>
+                  {passwordSaving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Zapisz hasło
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

@@ -97,41 +97,130 @@ export type Database = {
           },
         ]
       }
+      repair_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          repair_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          repair_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          repair_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_reviews_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "repairs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repair_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repair_status_history: {
+        Row: {
+          changed_at: string
+          id: string
+          repair_id: string
+          status: Database["public"]["Enums"]["repair_status"]
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          repair_id: string
+          status: Database["public"]["Enums"]["repair_status"]
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          repair_id?: string
+          status?: Database["public"]["Enums"]["repair_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_status_history_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "repairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           city: string | null
           created_at: string
+          dark_mode: boolean | null
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          newsletter: boolean | null
+          notification_email: boolean | null
+          notification_sms: boolean | null
           phone: string | null
           postal_code: string | null
           street: string | null
+          two_factor_enabled: boolean | null
           updated_at: string
         }
         Insert: {
           city?: string | null
           created_at?: string
+          dark_mode?: boolean | null
           email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          newsletter?: boolean | null
+          notification_email?: boolean | null
+          notification_sms?: boolean | null
           phone?: string | null
           postal_code?: string | null
           street?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Update: {
           city?: string | null
           created_at?: string
+          dark_mode?: boolean | null
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          newsletter?: boolean | null
+          notification_email?: boolean | null
+          notification_sms?: boolean | null
           phone?: string | null
           postal_code?: string | null
           street?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
         }
         Relationships: []
@@ -139,6 +228,7 @@ export type Database = {
       repairs: {
         Row: {
           attachments: string[] | null
+          archived_at: string | null
           created_at: string
           device_brand: string | null
           device_model: string | null
@@ -155,6 +245,7 @@ export type Database = {
         }
         Insert: {
           attachments?: string[] | null
+          archived_at?: string | null
           created_at?: string
           device_brand?: string | null
           device_model?: string | null
@@ -173,6 +264,7 @@ export type Database = {
         }
         Update: {
           attachments?: string[] | null
+          archived_at?: string | null
           created_at?: string
           device_brand?: string | null
           device_model?: string | null
@@ -192,6 +284,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "repairs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_role: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_role: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_threads_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

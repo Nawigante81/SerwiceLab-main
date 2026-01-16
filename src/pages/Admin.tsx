@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -16,21 +17,28 @@ type CostEstimate = Database["public"]["Tables"]["cost_estimates"]["Row"];
 type ContactMessage = Database["public"]["Tables"]["contact_messages"]["Row"];
 
 const Admin = () => {
+  const [repairsPage, setRepairsPage] = useState(1);
+  const repairsPageSize = 10;
   const {
     data: repairs,
     isLoading: repairsLoading,
     error: repairsError,
   } = useQuery({
-    queryKey: ["admin", "repairs"],
+    queryKey: ["admin", "repairs", repairsPage],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const from = (repairsPage - 1) * repairsPageSize;
+      const to = from + repairsPageSize - 1;
+      const { data, error, count } = await supabase
         .from("repairs")
-        .select("id,user_id,status,device_type,device_brand,device_model,created_at")
+        .select("id,user_id,status,device_type,device_brand,device_model,created_at", {
+          count: "exact",
+        })
+        .is("archived_at", null)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(from, to);
 
       if (error) throw error;
-      return data as Repair[];
+      return { data: data as Repair[], count: count ?? 0 };
     },
   });
 
@@ -86,7 +94,7 @@ const Admin = () => {
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs uppercase text-muted-foreground">Naprawy</p>
             <p className="text-2xl font-semibold text-foreground">
-              {repairsLoading ? "-" : repairs?.length ?? 0}
+              {repairsLoading ? "-" : repairs?.count ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
@@ -129,14 +137,14 @@ const Admin = () => {
                     </TableCell>
                   </TableRow>
                 )}
-                {!repairsLoading && (repairs?.length ?? 0) === 0 && (
+                {!repairsLoading && (repairs?.data.length ?? 0) === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-muted-foreground">
                       Brak danych.
                     </TableCell>
                   </TableRow>
                 )}
-                {repairs?.map((repair) => (
+                {repairs?.data.map((repair) => (
                   <TableRow key={repair.id}>
                     <TableCell>{repair.id.slice(0, 8).toUpperCase()}</TableCell>
                     <TableCell>{repair.user_id.slice(0, 8).toUpperCase()}</TableCell>
@@ -154,6 +162,31 @@ const Admin = () => {
               </TableBody>
             </Table>
           </div>
+          {!repairsLoading && (repairs?.count ?? 0) > repairsPageSize && (
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                Strona {repairsPage} z {Math.max(1, Math.ceil((repairs?.count ?? 0) / repairsPageSize))}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="px-3 py-1 rounded-md border border-border hover:border-primary/40"
+                  onClick={() => setRepairsPage((prev) => Math.max(1, prev - 1))}
+                  disabled={repairsPage === 1}
+                >
+                  Poprzednia
+                </button>
+                <button
+                  type="button"
+                  className="px-3 py-1 rounded-md border border-border hover:border-primary/40"
+                  onClick={() => setRepairsPage((prev) => prev + 1)}
+                  disabled={repairsPage >= Math.ceil((repairs?.count ?? 0) / repairsPageSize)}
+                >
+                  Następna
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="space-y-3">

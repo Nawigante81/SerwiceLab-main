@@ -74,8 +74,8 @@ const Contact = () => {
     if (!result.success) {
       const firstError = result.error.errors[0];
       toast({
-        title: "Błąd walidacji",
-        description: firstError.message,
+        title: "Niepoprawne dane w formularzu",
+        description: `${firstError.message}. Popraw i spróbuj ponownie.`,
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -109,8 +109,8 @@ const Contact = () => {
       });
     } catch (error) {
       toast({
-        title: "Błąd",
-        description: "Nie udało się wysłać wiadomości. Spróbuj ponownie.",
+        title: "Nie udało się wysłać wiadomości",
+        description: "Spróbuj ponownie za chwilę lub skontaktuj się telefonicznie.",
         variant: "destructive",
       });
     } finally {

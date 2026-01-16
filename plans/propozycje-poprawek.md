@@ -9,6 +9,7 @@ Projekt to aplikacja webowa dla serwisu napraw komputerowych w Polsce, zbudowana
 - **Walidacja danych wejściowych**: Dodać bardziej rygorystyczną walidację po stronie serwera dla wszystkich formularzy (np. sanitizacja HTML, sprawdzenie długości pól, formatów email/telefon).
 - **Ochrona przed XSS**: Używać biblioteki DOMPurify dla treści wprowadzanych przez użytkowników.
 - **Rate limiting**: Zaimplementować rate limiting dla API endpoints, szczególnie dla funkcji email i tworzenia zgłoszeń.
+- **Wdrozenie zabezpieczen**: Walidacja i sanitizacja w Supabase Edge Functions (np. Zod + DOMPurify) oraz limitowanie per IP/uzytkownik dla endpointow mailowych i tworzenia zgloszen.
 - **Autoryzacja**: Dodać role użytkowników (admin, klient) i odpowiednie polityki dostępu.
 - **Szyfrowanie wrażliwych danych**: Szyfrować numery telefonów i adresy w bazie danych.
 - **HTTPS**: Zapewnić wymuszenie HTTPS we wszystkich środowiskach.

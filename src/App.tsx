@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import { Cpu } from "lucide-react";
+import ThemeProvider from "@/components/theme-provider";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -23,6 +24,7 @@ const RepairRequest = lazy(() => import("./pages/RepairRequest"));
 const RepairTracking = lazy(() => import("./pages/RepairTracking"));
 const CostEstimate = lazy(() => import("./pages/CostEstimate"));
 const EquipmentPickup = lazy(() => import("./pages/EquipmentPickup"));
+const SupportChat = lazy(() => import("./pages/SupportChat"));
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -30,7 +32,8 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -114,6 +117,11 @@ const App = () => (
                   <EquipmentPickup />
                 </ProtectedRoute>
               } />
+              <Route path="/czat-wsparcia" element={
+                <ProtectedRoute>
+                  <SupportChat />
+                </ProtectedRoute>
+              } />
               <Route path="/admin" element={
                 <AdminRoute>
                   <Admin />
@@ -141,7 +149,8 @@ const App = () => (
           </Suspense>
         </AuthProvider>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

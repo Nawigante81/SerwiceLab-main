@@ -4,14 +4,12 @@ import {
   CheckCircle, 
   Clock, 
   CreditCard, 
-  ArrowUpRight, 
-  ArrowDownRight,
   Plus,
-  ChevronRight,
-  Loader2
+  ChevronRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useRepairs } from "@/hooks/useRepairs";
 import { useProfile } from "@/hooks/useProfile";
@@ -107,8 +105,76 @@ const Dashboard = () => {
   if (repairsLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-56" />
+              <Skeleton className="h-4 w-80" />
+            </div>
+            <Skeleton className="h-10 w-40" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="p-6 rounded-xl bg-card border border-border">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <Skeleton className="h-8 w-20 mt-4" />
+                <Skeleton className="h-4 w-24 mt-2" />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="p-6 rounded-xl bg-card border border-border space-y-3">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-6 w-60" />
+              <Skeleton className="h-4 w-72" />
+              <Skeleton className="h-10 w-36" />
+            </div>
+            <div className="p-6 rounded-xl bg-card border border-border space-y-3">
+              <Skeleton className="h-3 w-32" />
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between gap-3">
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-card border border-border">
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="divide-y divide-border">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="p-6 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-full max-w-md" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-6 rounded-xl bg-card border border-border space-y-3">
+                <Skeleton className="h-8 w-8" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+            ))}
+          </div>
         </div>
       </DashboardLayout>
     );

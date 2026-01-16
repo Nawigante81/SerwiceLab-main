@@ -1,7 +1,9 @@
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRepairs } from "@/hooks/useRepairs";
+import { useRepairStatusHistory } from "@/hooks/useRepairHistory";
 import { repairStatusLabels, statusColors, allStatuses, RepairStatus, getTrackingUrl } from "@/lib/repair-utils";
 import { 
   Search, 
@@ -13,11 +15,12 @@ import {
   FileText,
   ArrowRight,
   ExternalLink,
-  Loader2
+  Paperclip
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusIcons: Record<RepairStatus, React.ElementType> = {
   pending: Clock,
@@ -34,6 +37,7 @@ const RepairTracking = () => {
   const { data: repairs, isLoading } = useRepairs();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
+  const [attachmentUrls, setAttachmentUrls] = useState<{ path: string; url: string }[]>([]);
 
   // Set first repair as selected when data loads
   useEffect(() => {
@@ -43,6 +47,7 @@ const RepairTracking = () => {
   }, [repairs, selectedRepairId]);
 
   const selectedRepair = repairs?.find(r => r.id === selectedRepairId);
+  const { data: statusHistory = [] } = useRepairStatusHistory(selectedRepair?.id ?? null);
   const filteredRepairs = repairs?.filter(r => 
     r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.device_brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,12 +61,108 @@ const RepairTracking = () => {
   const trackingUrl = selectedRepair?.tracking_number_outbound
     ? getTrackingUrl(selectedRepair.tracking_number_outbound, selectedRepair.shipping_method)
     : null;
+  const timelineItems = statusHistory.length > 0
+    ? statusHistory.map((entry) => ({
+        status: entry.status as RepairStatus,
+        changedAt: entry.changed_at,
+      }))
+    : allStatuses.slice(0, currentStatusIndex + 1).map((status) => ({
+        status,
+        changedAt: null as string | null,
+      }));
+
+  useEffect(() => {
+    const loadAttachmentUrls = async () => {
+      if (!selectedRepair?.attachments?.length) {
+        setAttachmentUrls([]);
+        return;
+      }
+
+      const { data } = await supabase.storage
+        .from("repair-attachments")
+        .createSignedUrls(selectedRepair.attachments, 3600);
+
+      const urls = (data ?? [])
+        .filter((item) => item.signedUrl)
+        .map((item) => ({
+          path: item.path,
+          url: item.signedUrl,
+        }));
+
+      setAttachmentUrls(urls);
+    };
+
+    loadAttachmentUrls();
+  }, [selectedRepair?.attachments]);
 
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+
+          <div className="flex gap-4 max-w-xl">
+            <Skeleton className="h-10 w-full" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 space-y-4">
+              <Skeleton className="h-5 w-36" />
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="p-4 rounded-xl border border-border bg-card space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <div className="rounded-xl bg-card border border-border overflow-hidden">
+                <div className="p-6 border-b border-border flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <Skeleton className="h-6 w-28 rounded-full" />
+                </div>
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-5 w-40" />
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="flex gap-4">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <Skeleton className="h-4 w-40 mt-2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={index} className="p-4 rounded-xl bg-card border border-border space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-6 rounded-xl bg-card border border-border space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -184,12 +285,12 @@ const RepairTracking = () => {
                       Historia statusów
                     </h3>
                     <div className="relative">
-                      {allStatuses.slice(0, currentStatusIndex + 1).map((status, index) => {
-                        const Icon = statusIcons[status];
-                        const isLast = index === currentStatusIndex;
+                      {timelineItems.map((item, index) => {
+                        const Icon = statusIcons[item.status];
+                        const isLast = index === timelineItems.length - 1;
                         
                         return (
-                          <div key={status} className="flex gap-4 pb-6 last:pb-0">
+                          <div key={`${item.status}-${index}`} className="flex gap-4 pb-6 last:pb-0">
                             <div className="relative">
                               <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
@@ -205,8 +306,13 @@ const RepairTracking = () => {
                             </div>
                             <div className="pt-2">
                               <p className="font-sans font-medium text-foreground">
-                                {repairStatusLabels[status]}
+                                {repairStatusLabels[item.status]}
                               </p>
+                              {item.changedAt && (
+                                <p className="font-sans text-xs text-muted-foreground mt-1">
+                                  {new Date(item.changedAt).toLocaleString("pl-PL")}
+                                </p>
+                              )}
                             </div>
                           </div>
                         );
@@ -256,6 +362,33 @@ const RepairTracking = () => {
                     {selectedRepair.problem_description}
                   </p>
                 </div>
+
+                {attachmentUrls.length > 0 && (
+                  <div className="p-6 rounded-xl bg-card border border-border">
+                    <p className="font-sans text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                      Załączniki
+                    </p>
+                    <div className="space-y-2">
+                      {attachmentUrls.map((attachment) => (
+                        <a
+                          key={attachment.path}
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm text-foreground hover:border-primary/40"
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Paperclip className="w-4 h-4 text-primary" />
+                            <span className="truncate">
+                              {attachment.path.split("/").pop()}
+                            </span>
+                          </span>
+                          <span className="text-xs text-muted-foreground">Otwórz</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Action Button */}
                 {selectedRepair.status === "waiting_estimate" && (

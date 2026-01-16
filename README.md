@@ -71,3 +71,65 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## InPost Integration
+
+### Environment variables
+Configure the following variables in Supabase Edge Functions (and your local `.env` if you use `supabase start`):
+
+```
+INPOST_API_URL=https://api-shipx-pl.easypack24.net/v1
+INPOST_TOKEN=your_inpost_token
+INPOST_ORG_ID=your_org_id_optional
+INPOST_SENDER_NAME=ServiceLab
+INPOST_SENDER_PHONE=+48123123123
+INPOST_SENDER_EMAIL=kontakt@servicelab.pl
+INPOST_SENDER_ADDRESS_LINE1=ul. Serwisowa 15
+INPOST_SENDER_ADDRESS_LINE2=
+INPOST_SENDER_POSTAL_CODE=00-001
+INPOST_SENDER_CITY=Warszawa
+INPOST_SENDER_COUNTRY=PL
+INPOST_DEFAULT_WEIGHT=1
+INPOST_DEFAULT_LENGTH=10
+INPOST_DEFAULT_WIDTH=10
+INPOST_DEFAULT_HEIGHT=10
+INPOST_WEBHOOK_SECRET=optional_hmac_secret
+MOCK_INPOST=true
+```
+
+Supabase service role is required for the Edge Functions that write to DB/storage:
+
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+### Local run
+
+```
+npm install
+npm run dev
+
+# Supabase (local dev)
+supabase start
+supabase functions serve
+supabase db push
+```
+
+### Test endpoints
+
+```
+supabase functions invoke inpost-methods --method GET
+supabase functions invoke inpost-points --method GET --query "query=Warszawa"
+```
+
+### Definition of Done (manual QA)
+
+- Wybor metody dostawy pokazuje pelne nazwy uslug, cene i ETA; "Paczka w Weekend" jest na gorze.
+- Po wyborze dostawy do punktu otwiera sie modal z mapa i lista punktow.
+- Wyszukiwarka dziala (debounce), filtry Paczkomat/PaczkoPunkt dzialaja.
+- Wybrany punkt zapisuje sie w localStorage i (jesli zalogowany) w profilu uzytkownika.
+- Bez wybranego punktu lub adresu kuriera nie mozna przejsc dalej.
+- Utworzenie zgloszenia tworzy przesylke InPost i zapisuje ja w tabeli `shipments`.
+- Etykieta jest dostepna przez endpoint `inpost-label` i zapisywana w storage.
+- Tracking i webhook aktualizuja status w `shipments` oraz zapisuja `shipment_events`.

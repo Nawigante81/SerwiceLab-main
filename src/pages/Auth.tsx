@@ -66,14 +66,14 @@ const Auth = () => {
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
-              title: "Błąd logowania",
-              description: "Nieprawidłowy email lub hasło. Spróbuj ponownie.",
+              title: "Nie udało się zalogować",
+              description: "Sprawdź email i hasło, a następnie spróbuj ponownie.",
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Błąd logowania",
-              description: error.message,
+              title: "Nie udało się zalogować",
+              description: "Wystąpił błąd podczas logowania. Spróbuj ponownie.",
               variant: "destructive",
             });
           }
@@ -89,14 +89,14 @@ const Auth = () => {
         if (error) {
           if (error.message.includes("User already registered")) {
             toast({
-              title: "Konto już istnieje",
-              description: "Ten adres email jest już zarejestrowany. Spróbuj się zalogować.",
+              title: "Nie udało się utworzyć konta",
+              description: "Ten adres email jest już zarejestrowany. Zaloguj się lub użyj innego adresu.",
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Błąd rejestracji",
-              description: error.message,
+              title: "Nie udało się utworzyć konta",
+              description: "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.",
               variant: "destructive",
             });
           }

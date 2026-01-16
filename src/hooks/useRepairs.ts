@@ -18,6 +18,7 @@ export const useRepairs = () => {
         .from("repairs")
         .select("*")
         .eq("user_id", user.id)
+        .is("archived_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -40,6 +41,7 @@ export const useRepairById = (repairId: string | null) => {
         .select("*")
         .eq("id", repairId)
         .eq("user_id", user.id)
+        .is("archived_at", null)
         .maybeSingle();
 
       if (error) throw error;

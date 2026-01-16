@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRepairs } from "@/hooks/useRepairs";
 import { useCostEstimateByRepairId, useAcceptEstimate, useRejectEstimate } from "@/hooks/useCostEstimates";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
@@ -48,7 +49,7 @@ const CostEstimate = () => {
       toast.success("Kosztorys został zaakceptowany");
       navigate("/dashboard");
     } catch {
-      toast.error("Wystąpił błąd podczas akceptacji kosztorysu");
+      toast.error("Nie udało się zaakceptować kosztorysu. Spróbuj ponownie.");
     }
   };
 
@@ -60,15 +61,69 @@ const CostEstimate = () => {
       toast.success("Kosztorys został odrzucony");
       navigate("/dashboard");
     } catch {
-      toast.error("Wystąpił błąd podczas odrzucania kosztorysu");
+      toast.error("Nie udało się odrzucić kosztorysu. Spróbuj ponownie.");
     }
   };
 
   if (repairsLoading || estimateLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+
+          <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+            <Skeleton className="h-6 w-36 rounded-full" />
+          </div>
+
+          <div className="rounded-xl bg-card border border-border overflow-hidden">
+            <div className="p-6 border-b border-border flex items-center gap-3">
+              <Skeleton className="h-5 w-5" />
+              <Skeleton className="h-5 w-40" />
+            </div>
+            <div className="divide-y divide-border">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="p-4 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+            <div className="p-6 bg-secondary/30 border-t border-border flex items-center justify-between">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-7 w-24" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-4 rounded-xl bg-card border border-border space-y-2">
+                <Skeleton className="h-6 w-6" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Skeleton className="h-11 flex-1" />
+            <Skeleton className="h-11 sm:w-40" />
+          </div>
         </div>
       </DashboardLayout>
     );
