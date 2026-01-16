@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       contact_messages: {
         Row: {
+          archived_at: string | null
           created_at: string
           email: string
           id: string
@@ -25,6 +26,7 @@ export type Database = {
           subject: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           email: string
           id?: string
@@ -34,6 +36,7 @@ export type Database = {
           subject: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -47,6 +50,7 @@ export type Database = {
       cost_estimates: {
         Row: {
           accepted_at: string | null
+          archived_at: string | null
           created_at: string
           id: string
           items: Json
@@ -61,6 +65,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          archived_at?: string | null
           created_at?: string
           id?: string
           items?: Json
@@ -75,6 +80,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          archived_at?: string | null
           created_at?: string
           id?: string
           items?: Json

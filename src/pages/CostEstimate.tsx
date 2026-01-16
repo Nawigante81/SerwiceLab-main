@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRepairs } from "@/hooks/useRepairs";
+import { useRepairById, useRepairByStatus } from "@/hooks/useRepairs";
 import { useCostEstimateByRepairId, useAcceptEstimate, useRejectEstimate } from "@/hooks/useCostEstimates";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
@@ -28,18 +28,18 @@ const CostEstimate = () => {
   const navigate = useNavigate();
   const repairId = searchParams.get("repair");
   
-  const { data: repairs, isLoading: repairsLoading } = useRepairs();
-  const { data: estimate, isLoading: estimateLoading } = useCostEstimateByRepairId(repairId);
+  const { data: repairById, isLoading: repairLoading } = useRepairById(repairId);
+  const { data: waitingRepair, isLoading: waitingRepairLoading } = useRepairByStatus(
+    repairId ? null : "waiting_estimate"
+  );
+  const targetRepairId = repairId ?? waitingRepair?.id ?? null;
+  const { data: estimate, isLoading: estimateLoading } = useCostEstimateByRepairId(targetRepairId);
   const acceptMutation = useAcceptEstimate();
   const rejectMutation = useRejectEstimate();
 
   // Find repair awaiting approval if no specific repair is selected
-  const repair = repairId 
-    ? repairs?.find(r => r.id === repairId)
-    : repairs?.find(r => r.status === "waiting_estimate");
-
-  const { data: selectedEstimate } = useCostEstimateByRepairId(repair?.id ?? null);
-  const displayEstimate = estimate ?? selectedEstimate;
+  const repair = repairId ? repairById : waitingRepair;
+  const displayEstimate = estimate;
 
   const handleAccept = async () => {
     if (!displayEstimate) return;
@@ -65,7 +65,7 @@ const CostEstimate = () => {
     }
   };
 
-  if (repairsLoading || estimateLoading) {
+  if ((repairId ? repairLoading : waitingRepairLoading) || estimateLoading) {
     return (
       <DashboardLayout>
         <div className="max-w-3xl mx-auto space-y-8">

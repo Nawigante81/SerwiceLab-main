@@ -18,10 +18,10 @@ const HeroSection = () => {
         <img 
           src={heroImage} 
           alt="Professional computer repair workstation" 
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-center brightness-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/65 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
       </div>
 
       <div className="section-container relative z-10">

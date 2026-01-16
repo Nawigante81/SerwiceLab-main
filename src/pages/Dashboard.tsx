@@ -9,48 +9,71 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { useRepairs } from "@/hooks/useRepairs";
+import { useRepairByStatus, useRepairsPaginated, useRepairsStats } from "@/hooks/useRepairs";
 import { useProfile } from "@/hooks/useProfile";
 import { useCostEstimates } from "@/hooks/useCostEstimates";
 import { repairStatusLabels, statusColors, RepairStatus } from "@/lib/repair-utils";
 import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
 
 const Dashboard = () => {
-  const { data: repairs, isLoading: repairsLoading } = useRepairs();
+  const { data: stats, isLoading: statsLoading } = useRepairsStats();
   const { data: profile } = useProfile();
   const { data: estimates } = useCostEstimates();
+  const [repairsPage, setRepairsPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const repairsPageSize = 5;
+  const { data: repairsList, isLoading: repairsListLoading } = useRepairsPaginated({
+    page: repairsPage,
+    pageSize: repairsPageSize,
+    searchQuery,
+    select: "id, device_brand, device_model, status, problem_description",
+  });
+  const { data: recentUpdates, isLoading: updatesLoading } = useRepairsPaginated({
+    page: 1,
+    pageSize: 3,
+    select: "id, device_brand, device_model, status, updated_at",
+    orderBy: "updated_at",
+  });
+  const { data: waitingEstimate } = useRepairByStatus("waiting_estimate");
+  const { data: shipped } = useRepairByStatus("shipped");
+  const activeStatusList = useMemo<RepairStatus[]>(
+    () => ["pending", "received", "diagnosing", "in_repair"],
+    []
+  );
+  const { data: activeRepairsList } = useRepairsPaginated({
+    page: 1,
+    pageSize: 1,
+    statusIn: activeStatusList,
+    select: "id, status",
+  });
 
   // Calculate stats from real data
-  const activeRepairs = repairs?.filter(r => 
-    !["completed", "delivered"].includes(r.status)
-  ).length ?? 0;
-  
-  const completedRepairs = repairs?.filter(r => 
-    ["completed", "delivered"].includes(r.status)
-  ).length ?? 0;
-  
-  const pendingApproval = repairs?.filter(r => 
-    r.status === "waiting_estimate"
-  ).length ?? 0;
+  const activeRepairs = stats?.activeCount ?? 0;
+  const completedRepairs = stats?.completedCount ?? 0;
+  const pendingApproval = stats?.waitingEstimateCount ?? 0;
 
   const totalSpent = estimates
     ?.filter(e => e.status === "accepted")
     .reduce((sum, e) => sum + Number(e.total_cost), 0) ?? 0;
 
-  const stats = [
+  const statsCards = [
     { label: "Aktywne naprawy", value: activeRepairs, icon: Wrench },
     { label: "Zakończone", value: completedRepairs, icon: CheckCircle },
     { label: "Oczekujące", value: pendingApproval, icon: Clock },
     { label: "Wydatki (PLN)", value: totalSpent, icon: CreditCard },
   ];
 
-  const recentRepairs = repairs?.slice(0, 5) ?? [];
+  const recentRepairs = repairsList?.data ?? [];
+  const totalRepairs = repairsList?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalRepairs / repairsPageSize));
   const firstName = profile?.first_name || "użytkowniku";
 
   const getNextStep = () => {
-    if (!repairs || repairs.length === 0) {
+    if ((stats?.totalCount ?? 0) === 0) {
       return {
         title: "Zacznij od zgłoszenia naprawy",
         description: "Wypełnij krótki formularz i nadaj sprzęt w paczkomacie.",
@@ -59,7 +82,6 @@ const Dashboard = () => {
       };
     }
 
-    const waitingEstimate = repairs.find(r => r.status === "waiting_estimate");
     if (waitingEstimate) {
       return {
         title: "Czekamy na akceptację kosztorysu",
@@ -69,7 +91,6 @@ const Dashboard = () => {
       };
     }
 
-    const shipped = repairs.find(r => r.status === "shipped");
     if (shipped) {
       return {
         title: "Sprzęt jest w drodze",
@@ -79,7 +100,7 @@ const Dashboard = () => {
       };
     }
 
-    const active = repairs.find(r => !["completed", "delivered"].includes(r.status));
+    const active = activeRepairsList?.data?.[0];
     if (active) {
       return {
         title: "Naprawa w toku",
@@ -98,11 +119,9 @@ const Dashboard = () => {
   };
 
   const nextStep = getNextStep();
-  const recentUpdates = [...(repairs ?? [])]
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 3);
+  const recentUpdatesList = recentUpdates?.data ?? [];
 
-  if (repairsLoading) {
+  if (statsLoading || repairsListLoading || updatesLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-8">
@@ -203,7 +222,7 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => {
+          {statsCards.map((stat) => {
             const Icon = stat.icon;
             
             return (
@@ -259,9 +278,9 @@ const Dashboard = () => {
             <p className="font-sans text-xs text-muted-foreground uppercase tracking-wide">
               Ostatnie aktualizacje
             </p>
-            {recentUpdates.length > 0 ? (
+            {recentUpdatesList.length > 0 ? (
               <div className="space-y-3 mt-4">
-                {recentUpdates.map((repair) => (
+                {recentUpdatesList.map((repair) => (
                   <div key={repair.id} className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-sans text-sm text-foreground truncate">
@@ -290,17 +309,28 @@ const Dashboard = () => {
 
         {/* Recent Repairs */}
         <div className="rounded-xl bg-card border border-border">
-          <div className="p-6 border-b border-border flex items-center justify-between">
+          <div className="p-6 border-b border-border flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-display text-lg font-semibold text-foreground">
               Ostatnie naprawy
             </h2>
-            <Link 
-              to="/sledzenie-statusu-naprawy"
-              className="font-sans text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              Zobacz wszystkie
-              <ChevronRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Input
+                placeholder="Szukaj po ID lub modelu..."
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setRepairsPage(1);
+                }}
+                className="h-9 w-full sm:w-56"
+              />
+              <Link
+                to="/sledzenie-statusu-naprawy"
+                className="font-sans text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                Zobacz wszystkie
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
           {recentRepairs.length > 0 ? (
             <div className="divide-y divide-border">
@@ -343,6 +373,29 @@ const Dashboard = () => {
                   Zgłoś pierwszą naprawę
                 </Button>
               </Link>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-border flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRepairsPage((prev) => Math.max(1, prev - 1))}
+                disabled={repairsPage === 1}
+              >
+                Poprzednia
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Strona {repairsPage} z {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRepairsPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={repairsPage >= totalPages}
+              >
+                Następna
+              </Button>
             </div>
           )}
         </div>

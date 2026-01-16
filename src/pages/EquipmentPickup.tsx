@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRepairs } from "@/hooks/useRepairs";
+import { useRepairsPaginated, useRepairByStatus } from "@/hooks/useRepairs";
 import { useCreateRepairReview, useRepairReviews, useUpdateRepairReview } from "@/hooks/useRepairReviews";
 import { repairStatusLabels, getTrackingUrl } from "@/lib/repair-utils";
 import { 
@@ -20,7 +20,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const EquipmentPickup = () => {
-  const { data: repairs, isLoading } = useRepairs();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+  const { data: repairsPage, isLoading: repairsLoading } = useRepairsPaginated({
+    page: currentPage,
+    pageSize,
+    statusIn: ["completed", "shipped", "delivered"],
+    select: "id, status, device_brand, device_model, created_at",
+  });
+  const { data: activeShipment, isLoading: shipmentLoading } = useRepairByStatus("shipped");
+  const isLoading = repairsLoading || shipmentLoading;
   const { data: reviews = [] } = useRepairReviews();
   const createReview = useCreateRepairReview();
   const updateReview = useUpdateRepairReview();
@@ -29,9 +38,9 @@ const EquipmentPickup = () => {
   const [submittingReviewId, setSubmittingReviewId] = useState<string | null>(null);
 
   // Get completed/shipped repairs
-  const completedRepairs = repairs?.filter(
-    r => r.status === "completed" || r.status === "shipped" || r.status === "delivered"
-  ) ?? [];
+  const completedRepairs = repairsPage?.data ?? [];
+  const totalRepairs = repairsPage?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalRepairs / pageSize));
   const reviewByRepairId = useMemo(() => {
     const map = new Map<string, (typeof reviews)[number]>();
     reviews.forEach((review) => {
@@ -57,7 +66,6 @@ const EquipmentPickup = () => {
   }, [completedRepairs, reviewByRepairId]);
 
   // Find active shipment (shipped status)
-  const activeShipment = repairs?.find(r => r.status === "shipped");
   const trackingUrl = activeShipment?.tracking_number_return
     ? getTrackingUrl(activeShipment.tracking_number_return, activeShipment.shipping_method)
     : null;
@@ -428,6 +436,29 @@ const EquipmentPickup = () => {
               <p className="font-sans text-sm text-muted-foreground mt-1">
                 Tutaj pojawią się informacje o dostarczonych naprawach
               </p>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Poprzednia
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Strona {currentPage} z {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Następna
+              </Button>
             </div>
           )}
         </div>

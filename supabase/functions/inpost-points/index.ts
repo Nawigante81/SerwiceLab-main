@@ -38,22 +38,29 @@ const handler = async (req: Request): Promise<Response> => {
       ? rawPoints.items
       : [];
 
-    const points = pointsArray.map((point: any) => ({
-      point_id: point.point_id ?? point.name ?? point.id ?? "",
-      name: point.name ?? point.point_id ?? point.id ?? "",
-      address:
-        point.address?.line1 ||
-        point.address?.street ||
-        point.address?.address ||
-        point.address ||
-        "",
-      lat: Number(point.location?.latitude ?? point.lat ?? point.latitude ?? 0),
-      lng: Number(point.location?.longitude ?? point.lng ?? point.longitude ?? 0),
-      type: point.type === "locker" || point.type === "parcel_locker" ? "locker" : "partner",
-      hours: point.opening_hours ?? point.hours ?? null,
-      description: point.description ?? null,
-      image_url: point.image_url ?? null,
-    }));
+    const points = pointsArray.map((point: Record<string, unknown>) => {
+      const address = point.address as
+        | { line1?: string; street?: string; address?: string }
+        | string
+        | undefined;
+      const location = point.location as { latitude?: number; longitude?: number } | undefined;
+      const pointType = point.type;
+
+      return {
+        point_id: (point.point_id ?? point.name ?? point.id ?? "") as string,
+        name: (point.name ?? point.point_id ?? point.id ?? "") as string,
+        address:
+          (typeof address === "string"
+            ? address
+            : address?.line1 || address?.street || address?.address) || "",
+        lat: Number(location?.latitude ?? point.lat ?? point.latitude ?? 0),
+        lng: Number(location?.longitude ?? point.lng ?? point.longitude ?? 0),
+        type: pointType === "locker" || pointType === "parcel_locker" ? "locker" : "partner",
+        hours: (point.opening_hours ?? point.hours ?? null) as string | null,
+        description: (point.description ?? null) as string | null,
+        image_url: (point.image_url ?? null) as string | null,
+      };
+    });
     return withCors(
       new Response(JSON.stringify({ points }), { status: 200, headers: { "Content-Type": "application/json" } })
     );

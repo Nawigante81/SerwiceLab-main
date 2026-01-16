@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRepairs } from "@/hooks/useRepairs";
+import { useRepairById, useRepairsPaginated } from "@/hooks/useRepairs";
 import { useRepairStatusHistory } from "@/hooks/useRepairHistory";
 import { repairStatusLabels, statusColors, allStatuses, RepairStatus, getTrackingUrl } from "@/lib/repair-utils";
 import { 
@@ -34,26 +34,38 @@ const statusIcons: Record<RepairStatus, React.ElementType> = {
 };
 
 const RepairTracking = () => {
-  const { data: repairs, isLoading } = useRepairs();
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+  const { data: repairsPage, isLoading } = useRepairsPaginated({
+    page: currentPage,
+    pageSize,
+    searchQuery,
+  });
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
   const [attachmentUrls, setAttachmentUrls] = useState<{ path: string; url: string }[]>([]);
 
-  // Set first repair as selected when data loads
   useEffect(() => {
-    if (repairs && repairs.length > 0 && !selectedRepairId) {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Set first repair as selected when data loads or page changes
+  useEffect(() => {
+    const repairs = repairsPage?.data ?? [];
+    if (!repairs.length) {
+      setSelectedRepairId(null);
+      return;
+    }
+    if (!selectedRepairId || !repairs.some((repair) => repair.id === selectedRepairId)) {
       setSelectedRepairId(repairs[0].id);
     }
-  }, [repairs, selectedRepairId]);
+  }, [repairsPage?.data, selectedRepairId]);
 
-  const selectedRepair = repairs?.find(r => r.id === selectedRepairId);
+  const { data: selectedRepair } = useRepairById(selectedRepairId);
   const { data: statusHistory = [] } = useRepairStatusHistory(selectedRepair?.id ?? null);
-  const filteredRepairs = repairs?.filter(r => 
-    r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.device_brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.device_model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.tracking_number_outbound?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const repairs = repairsPage?.data ?? [];
+  const totalRepairs = repairsPage?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalRepairs / pageSize));
 
   const currentStatusIndex = selectedRepair 
     ? allStatuses.indexOf(selectedRepair.status as RepairStatus)
@@ -194,7 +206,7 @@ const RepairTracking = () => {
           </div>
         </div>
 
-        {(!repairs || repairs.length === 0) ? (
+        {totalRepairs === 0 ? (
           <div className="p-8 rounded-xl bg-card border border-border text-center">
             <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="font-sans text-foreground font-medium">
@@ -217,7 +229,7 @@ const RepairTracking = () => {
                 Twoje naprawy
               </h2>
               <div className="space-y-3">
-                {filteredRepairs?.map((repair) => {
+                {repairs.map((repair) => {
                   const Icon = statusIcons[repair.status as RepairStatus];
                   return (
                     <button
@@ -253,6 +265,29 @@ const RepairTracking = () => {
                   );
                 })}
               </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Poprzednia
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Strona {currentPage} z {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Następna
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Repair Details */}
