@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Cpu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -35,19 +35,19 @@ const Navbar = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="section-container">
-        <div className="flex items-center justify-between h-16">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div 
-              className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center transition-shadow duration-300"
-              whileHover={{ 
-                boxShadow: '0 0 25px hsl(82 100% 46% / 0.6)'
-              }}
+              className="w-48 h-20 flex items-center justify-center overflow-visible"
             >
-              <Cpu className="w-5 h-5 text-primary-foreground" />
+              <img
+                src="/servicelab-logo-transparent.png"
+                alt="ServiceLab logo"
+                className="h-36 w-auto object-contain transition-[filter] duration-300 group-hover:drop-shadow-[0_0_18px_hsl(82_100%_46%_/_0.5)]"
+              />
             </motion.div>
-            <span className="text-xl font-bold text-foreground font-display">ServiceLab</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Cpu, 
   LayoutDashboard, 
   Plus, 
   Search, 
@@ -87,10 +86,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-card border-b border-border flex items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Cpu className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">ServiceLab</span>
+          <img
+            src="/servicelab-logo-transparent.png"
+            alt="ServiceLab logo"
+            className="h-12 w-auto object-contain"
+          />
         </Link>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -110,10 +110,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center group-hover:shadow-[0_0_20px_hsl(82_100%_46%_/_0.5)] transition-shadow duration-300">
-              <Cpu className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-display text-xl font-bold text-foreground">ServiceLab</span>
+            <img
+              src="/servicelab-logo-transparent.png"
+              alt="ServiceLab logo"
+              className="h-12 w-auto object-contain transition-[filter] duration-300 group-hover:drop-shadow-[0_0_18px_hsl(82_100%_46%_/_0.5)]"
+            />
           </Link>
         </div>
 
